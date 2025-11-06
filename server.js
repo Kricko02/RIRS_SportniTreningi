@@ -24,7 +24,7 @@ mongoose
   .catch((err) => console.error("MongoDB error:", err));
 
 app.get("/", (req, res) => {
-  res.send("Server running ✅");
+  res.send("Server running");
 });
 
 app.use("/api/auth", authRoutes);

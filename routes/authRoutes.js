@@ -4,7 +4,7 @@ import authMiddleware from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 const router = express.Router();
 
-router.post("/signup", signup);
+router.post("/signup", authMiddleware, signup);
 router.post("/signin", signin);
 router.post("/refresh", refreshToken);
 
