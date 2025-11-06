@@ -8,7 +8,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "supersecret_access";
 
 export const signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
@@ -18,11 +18,12 @@ export const signup = async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user, allow role from request but default to 'user'
     const newUser = await User.create({
       username,
       email,
       password: hashedPassword,
+      role: role && role === "admin" ? "admin" : "user",
     });
 
     // Generate tokens
@@ -33,7 +34,7 @@ export const signup = async (req, res) => {
       expiresIn: "7d",
     });
 
-    // ✅ Send user object properly
+    // Send user object including role
     res.status(201).json({
       token,
       refreshToken,
@@ -41,6 +42,7 @@ export const signup = async (req, res) => {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
+        role: newUser.role,
       },
     });
   } catch (err) {
@@ -66,7 +68,44 @@ export const signin = async (req, res) => {
     res.json({
       token,
       refreshToken,
-      user: { id: user._id, username: user.username, email: user.email },
+      user: { id: user._id, username: user.username, email: user.email, role: user.role },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const createUser = async (req, res) => {
+  try {
+    // only admins may create users here
+    if (!req.user || req.user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden: admin only" });
+    }
+
+    const { username, email, password, role } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ message: "username, email and password required" });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "Email already registered" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashedPassword,
+      role: role === "admin" ? "admin" : "user",
+    });
+
+    // return created user (no tokens)
+    res.status(201).json({
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+      },
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
