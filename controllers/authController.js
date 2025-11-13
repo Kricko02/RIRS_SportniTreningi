@@ -19,11 +19,14 @@ export const signup = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user, allow role from request but default to 'user'
+    const normalizedRole =
+      role === "admin" ? "admin" : role === "trener" ? "trener" : "user";
+
     const newUser = await User.create({
       username,
       email,
       password: hashedPassword,
-      role: role && role === "admin" ? "admin" : "user",
+      role: normalizedRole,
     });
 
     // Generate tokens
@@ -91,11 +94,14 @@ export const createUser = async (req, res) => {
     if (existingUser) return res.status(400).json({ message: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    const normalizedRole =
+      role === "admin" ? "admin" : role === "trener" ? "trener" : "user";
+
     const newUser = await User.create({
       username,
       email,
       password: hashedPassword,
-      role: role === "admin" ? "admin" : "user",
+      role: normalizedRole,
     });
 
     // return created user (no tokens)

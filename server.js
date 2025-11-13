@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
-import postRoutes from "./routes/postRoutes.js";
+import treningRoutes from "./routes/treningRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 
 dotenv.config();
@@ -28,7 +28,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
-app.use("/api/posts", postRoutes);
+app.use("/api/trenings", treningRoutes);
+// Backward compatibility while frontend transitions
+app.use("/api/posts", treningRoutes);
 
 const PORT = process.env.PORT || 3242;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
